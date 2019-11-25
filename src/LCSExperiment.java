@@ -4,6 +4,11 @@ import java.io.*;
 import java.lang.Object;
 import java.lang.String;
 import java.util.Arrays;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+
 
 public class LCSExperiment {
 
@@ -17,8 +22,6 @@ public class LCSExperiment {
     static int MININPUTSIZE  =  1;
     // static int SIZEINCREMENT =  10000000; // not using this since we are doubling the size each time
 
-
-
     static String ResultsFolderPath = "/home/karson/Results/"; // pathname to results folder
     static FileWriter resultsFile;
     static PrintWriter resultsWriter;
@@ -27,9 +30,9 @@ public class LCSExperiment {
     public static void main(String[] args) {
 
         // run the whole experiment at least twice, and expect to throw away the data from the earlier runs, before java has fully optimized
-        runFullExperiment("newLCS-Exp1-ThrowAway.txt");
-        runFullExperiment("newLCS-Exp2.txt");
-        runFullExperiment("newLCS-Exp3.txt");
+        runFullExperiment("TextLCS-Exp1-ThrowAway.txt");
+        runFullExperiment("TextLCS-Exp2.txt");
+        runFullExperiment("TextLCS-Exp3.txt");
     }
 
     static void runFullExperiment(String resultsFileName){
@@ -45,6 +48,12 @@ public class LCSExperiment {
         ThreadCpuStopWatch BatchStopwatch = new ThreadCpuStopWatch(); // for timing an entire set of trials
         ThreadCpuStopWatch TrialStopwatch = new ThreadCpuStopWatch(); // for timing an individual trial
 
+        //read in huckleberry book
+        String huckleText = "";
+        String filePath = "/home/karson/Documents/HuckleBerry.txt";
+
+        huckleText = textToString(filePath).replaceAll(" ", ""); // remove spaces
+
         resultsWriter.println("#InputSize    AverageTime"); // # marks a comment in gnuplot data
         resultsWriter.flush();
         /* for each size of input we want to test: in this case starting small and doubling the size each time */
@@ -59,13 +68,20 @@ public class LCSExperiment {
             // but we will randomly generate the search key for each trial
             System.out.print("    Generating test data...");
 
-            int num = 10; //generating two random integers
-            String random1 = randomString(num);
-            num = 10;
-            String random2 = randomString(num);
+            String random1 = "", random2 = "";
 
             //random1 = "xxxxxxxx";
             //random2 = "xxxxxxxx";
+
+            double dub = (Math.random()*25)+1; //generating two random integers
+            int num = (int)dub;
+            //random1 = randomString(num);
+            random1 = huckleString(num, huckleText);
+            dub = (Math.random()*25)+1;
+            num = (int)dub;
+            //random2 = randomString(num);
+            random2 = huckleString(num, huckleText);
+
 
             System.out.println("...done.");
             System.out.print("    Running trial batch...");
@@ -89,8 +105,8 @@ public class LCSExperiment {
                 /* run the function we're testing on the trial input */
 
 
-                //findLCS = bruteLCS(random1,random2);
-                findLCS = newLCS(random1,random2);
+                findLCS = bruteLCS(random1,random2);
+                //findLCS = newLCS(random1,random2);
 
 
                 // batchElapsedTime = batchElapsedTime + TrialStopwatch.elapsedTime(); // *** uncomment this line if timing trials individually
@@ -101,16 +117,17 @@ public class LCSExperiment {
             String LCS = "";
 
             //if statement is needed for my version since the strings could get swapped depending on which one is smallest
-            if(random1.length() <= random2.length()) {
+            //if(random1.length() <= random2.length()) {
                 for (int i = 0; i < findLCS[0]; i++) {
                     LCS += random1.charAt(findLCS[1] + i);
                 }
-            }
-            else{
+            /*}
+            else {
                 for (int i = 0; i < findLCS[0]; i++) {
                     LCS += random2.charAt(findLCS[1] + i);
                 }
             }
+            */
 
             if(findLCS[0] == 0)
                 LCS = "nothing";
@@ -147,6 +164,18 @@ public class LCSExperiment {
         }
 
         return sb.toString();
+    }
+
+    public static String huckleString(int n, String huckle){
+        String subString = "";
+        double dub = (Math.random()*huckle.length())+1;
+        int num = (int)dub;
+
+        for( int i = 0; i < n; i++){
+            subString+= huckle.charAt(i+num);
+        }
+
+        return subString;
     }
 
     public static int[] bruteLCS(String string1, String string2){
@@ -219,4 +248,19 @@ public class LCSExperiment {
 
         return LCSVal;
     }
+
+    private static String textToString(String filePath)
+    {
+        String content = "";
+        try
+        {
+            content = new String ( Files.readAllBytes( Paths.get(filePath) ) );
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        return content;
+    }
+
 }
